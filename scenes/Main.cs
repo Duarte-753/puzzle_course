@@ -5,22 +5,41 @@ namespace Game;
 
 public partial class Main : Node2D
 {
-	private Sprite2D sprite;
+	// Declare member variables here. Examples:
+	// private int a = 2;
+	private Sprite2D cursor;
 	private PackedScene buildingScene;
+	private Button placeBuildingButton;
+	
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
-		sprite = GetNode<Sprite2D>("Cursor");
+		//initialize the sprite and building scene
+		cursor = GetNode<Sprite2D>("Cursor");
 		buildingScene = GD.Load<PackedScene>("res://scenes/building/Building.tscn");
+		placeBuildingButton = GetNode<Button>("PlaceBuildingButton");
+
+		cursor.Visible = false;
+
+		// Connect the button's pressed signal to the handler method
+		//or other using the Connect method
+		/*
+		placeBuildingButton.Connect("pressed", new Callable(this, nameof(OnButtonPressed)));
+		placeBuildingButton.Connect(Button.SignalName.Pressed, Callable.From(OnButtonPressed));
+		*/
+		placeBuildingButton.Pressed += OnButtonPressed;
+
+		
 	}
 
     public override void _UnhandledInput(InputEvent evt)
     {
-		if (evt.IsActionPressed("left_click"))
+		if ( cursor.Visible && evt.IsActionPressed("left_click"))
 		{
 			//GD.Print("left_click Clicked");
 			PlaceBuildingAtMousePosition();
+			cursor.Visible = false;
 		}
 
 		if (evt.IsActionPressed("right_click"))
@@ -34,8 +53,9 @@ public partial class Main : Node2D
 	public override void _Process(double delta)
 	{
 		var gridPosition = GetMouseGridCellPosition();
-		sprite.Position = gridPosition * 64;
+		cursor.Position = gridPosition * 64;
 	}
+
 
 	// Get the mouse position in grid coordinates (assuming each cell is 64x64 pixels)
 	private Vector2 GetMouseGridCellPosition()
@@ -55,5 +75,14 @@ public partial class Main : Node2D
 
 		var gridPosition = GetMouseGridCellPosition();
 		building.Position = gridPosition * 64;
+	}
+
+	//=======================signails========================
+
+	///Metjod to handle button press event
+	private void OnButtonPressed()
+	{
+		//GD.Print("Place Building Button Pressed");
+		cursor.Visible = true;
 	}
 }
