@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 
 namespace Game;
 
@@ -11,7 +12,9 @@ public partial class Main : Node2D
 	private PackedScene buildingScene;
 	private Button placeBuildingButton;
 	private TileMapLayer highlightTilemapLayer;
+
 	private Vector2? hoveredGridCell;
+	private HashSet<Vector2> occupiedCells = new(); 
 	
 
 	// Called when the node enters the scene tree for the first time.
@@ -50,7 +53,7 @@ public partial class Main : Node2D
 
     public override void _UnhandledInput(InputEvent evt)
     {
-		if ( cursor.Visible && evt.IsActionPressed("left_click"))
+		if ( cursor.Visible && evt.IsActionPressed("left_click") && !occupiedCells.Contains(GetMouseGridCellPosition()) )
 		{
 			//GD.Print("left_click Clicked");
 			PlaceBuildingAtMousePosition();
@@ -81,6 +84,7 @@ public partial class Main : Node2D
 
 		var gridPosition = GetMouseGridCellPosition();
 		building.Position = gridPosition * 64;
+		occupiedCells.Add(gridPosition);
 
 		hoveredGridCell = null;
 		UpdateHighlightTilemaplayer();
