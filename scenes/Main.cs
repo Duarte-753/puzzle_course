@@ -10,6 +10,8 @@ public partial class Main : Node2D
 	private Sprite2D cursor;
 	private PackedScene buildingScene;
 	private Button placeBuildingButton;
+	private TileMapLayer highlightTilemapLayer;
+	private Vector2? hoveredGridCell;
 	
 
 	// Called when the node enters the scene tree for the first time.
@@ -19,6 +21,7 @@ public partial class Main : Node2D
 		cursor = GetNode<Sprite2D>("Cursor");
 		buildingScene = GD.Load<PackedScene>("res://scenes/building/Building.tscn");
 		placeBuildingButton = GetNode<Button>("PlaceBuildingButton");
+		highlightTilemapLayer = GetNode<TileMapLayer>("HighLightTileMapLayer");
 
 		cursor.Visible = false;
 
@@ -31,6 +34,18 @@ public partial class Main : Node2D
 		placeBuildingButton.Pressed += OnButtonPressed;
 
 		
+	}
+
+	// Called every frame. 'delta' is the elapsed time since the previous frame.
+	public override void _Process(double delta)
+	{
+		var gridPosition = GetMouseGridCellPosition();
+		cursor.Position = gridPosition * 64;
+		if (cursor.Visible && (!hoveredGridCell.HasValue || hoveredGridCell.Value != gridPosition))		
+		{
+			hoveredGridCell = gridPosition;
+			UpdateHighlightTilemaplayer();
+		}
 	}
 
     public override void _UnhandledInput(InputEvent evt)
@@ -47,15 +62,6 @@ public partial class Main : Node2D
 			//GD.Print("right_click Clicked");
 		}
     }
-
-
-	// Called every frame. 'delta' is the elapsed time since the previous frame.
-	public override void _Process(double delta)
-	{
-		var gridPosition = GetMouseGridCellPosition();
-		cursor.Position = gridPosition * 64;
-	}
-
 
 	// Get the mouse position in grid coordinates (assuming each cell is 64x64 pixels)
 	private Vector2 GetMouseGridCellPosition()
@@ -75,6 +81,27 @@ public partial class Main : Node2D
 
 		var gridPosition = GetMouseGridCellPosition();
 		building.Position = gridPosition * 64;
+
+		hoveredGridCell = null;
+		UpdateHighlightTilemaplayer();
+	}
+
+	private void UpdateHighlightTilemaplayer()
+	{
+		highlightTilemapLayer.Clear();
+		
+		if (!hoveredGridCell.HasValue)
+		{
+			return;
+		}
+		
+		for(var x = hoveredGridCell.Value.X - 3; x <= hoveredGridCell.Value.X + 3; x++)
+		{
+			for(var y = hoveredGridCell.Value.Y - 3; y <= hoveredGridCell.Value.Y + 3; y++)
+			{
+				highlightTilemapLayer.SetCell(new Vector2I((int)x, (int)y), 0, Vector2I.Zero);
+			}
+		}
 	}
 
 	//=======================signails========================
