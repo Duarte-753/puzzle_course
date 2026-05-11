@@ -1,5 +1,4 @@
 using Godot;
-using System;
 using System.Collections.Generic;
 
 namespace Game;
@@ -53,10 +52,10 @@ public partial class Main : Node
 
     public override void _UnhandledInput(InputEvent evt)
     {
-		if ( cursor.Visible && evt.IsActionPressed("left_click") && !occupiedCells.Contains(GetMouseGridCellPosition()) )
+		if (hoveredGridCell.HasValue && cursor.Visible && evt.IsActionPressed("left_click") && !occupiedCells.Contains(hoveredGridCell.Value) )
 		{
 			//GD.Print("left_click Clicked");
-			PlaceBuildingAtMousePosition();
+			PlaceBuildingAtHoveredCellPosition();
 			cursor.Visible = false;
 		}
 
@@ -77,14 +76,19 @@ public partial class Main : Node
 	}
 
 	// This method can be called when the player clicks to place a building
-	private void PlaceBuildingAtMousePosition()
+	private void PlaceBuildingAtHoveredCellPosition()
 	{
+		if (!hoveredGridCell.HasValue)
+		{
+			return;
+		}
+
 		var building = buildingScene.Instantiate<Node2D>();
 		AddChild(building);
 
-		var gridPosition = GetMouseGridCellPosition();
-		building.Position = gridPosition * 64;
-		occupiedCells.Add(gridPosition);
+		
+		building.Position = hoveredGridCell.Value * 64;
+		occupiedCells.Add(hoveredGridCell.Value);
 
 		hoveredGridCell = null;
 		UpdateHighlightTilemaplayer();
