@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Game;
 
-public partial class Main : Node2D
+public partial class Main : Node
 {
 	// Declare member variables here. Examples:
 	// private int a = 2;
@@ -69,7 +69,7 @@ public partial class Main : Node2D
 	// Get the mouse position in grid coordinates (assuming each cell is 64x64 pixels)
 	private Vector2 GetMouseGridCellPosition()
 	{
-		var mousePosition = GetGlobalMousePosition();
+		var mousePosition = highlightTilemapLayer.GetGlobalMousePosition();
 		var gridPosition = mousePosition / 64;
 		gridPosition = gridPosition.Floor();
 		//GD.Print(gridPosition);
