@@ -1,34 +1,35 @@
+using Game.Manager;
 using Godot;
-using System.Collections.Generic;
 
 namespace Game;
 
 public partial class Main : Node
 {
 	// Declare member variables here. Examples:
-	// private int a = 2;
+	// Declaração de variáveis membro aqui. Exemplos:
+	private GridManager gridManager;
 	private Sprite2D cursor;
 	private PackedScene buildingScene;
 	private Button placeBuildingButton;
-	private TileMapLayer highlightTilemapLayer;
 
 	private Vector2? hoveredGridCell;
-	private HashSet<Vector2> occupiedCells = new(); 
 	
-
+	
 	// Called when the node enters the scene tree for the first time.
+	// Chamado quando o nó entra na árvore de cena pela primeira vez.
 	public override void _Ready()
 	{
 		//initialize the sprite and building scene
+		//inicialize o sprite e a cena do edifício
+		gridManager = GetNode<GridManager>("GridManager");
 		cursor = GetNode<Sprite2D>("Cursor");
 		buildingScene = GD.Load<PackedScene>("res://scenes/building/Building.tscn");
 		placeBuildingButton = GetNode<Button>("PlaceBuildingButton");
-		highlightTilemapLayer = GetNode<TileMapLayer>("HighLightTileMapLayer");
 
 		cursor.Visible = false;
 
 		// Connect the button's pressed signal to the handler method
-		//or other using the Connect method
+		// Conecte o sinal de pressionado do botão ao método manipulador
 		/*
 		placeBuildingButton.Connect("pressed", new Callable(this, nameof(OnButtonPressed)));
 		placeBuildingButton.Connect(Button.SignalName.Pressed, Callable.From(OnButtonPressed));
@@ -39,20 +40,21 @@ public partial class Main : Node
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
+	// Chamado a cada frame. 'delta' é o tempo decorrido desde o frame anterior.
 	public override void _Process(double delta)
 	{
-		var gridPosition = GetMouseGridCellPosition();
-		cursor.Position = gridPosition * 64;
+		var gridPosition = gridManager.GetMouseGridCellPosition();
+		cursor.GlobalPosition = gridPosition * 64;
 		if (cursor.Visible && (!hoveredGridCell.HasValue || hoveredGridCell.Value != gridPosition))		
 		{
 			hoveredGridCell = gridPosition;
-			UpdateHighlightTilemaplayer();
+			gridManager.HighlightValidTilesInRadius(hoveredGridCell.Value, 3);
 		}
 	}
 
     public override void _UnhandledInput(InputEvent evt)
     {
-		if (hoveredGridCell.HasValue && cursor.Visible && evt.IsActionPressed("left_click") && !occupiedCells.Contains(hoveredGridCell.Value) )
+		if (hoveredGridCell.HasValue && cursor.Visible && evt.IsActionPressed("left_click") && gridManager.IsTilePositionValid(hoveredGridCell.Value))
 		{
 			//GD.Print("left_click Clicked");
 			PlaceBuildingAtHoveredCellPosition();
@@ -65,17 +67,9 @@ public partial class Main : Node
 		}
     }
 
-	// Get the mouse position in grid coordinates (assuming each cell is 64x64 pixels)
-	private Vector2 GetMouseGridCellPosition()
-	{
-		var mousePosition = highlightTilemapLayer.GetGlobalMousePosition();
-		var gridPosition = mousePosition / 64;
-		gridPosition = gridPosition.Floor();
-		//GD.Print(gridPosition);
-		return gridPosition;
-	}
 
 	// This method can be called when the player clicks to place a building
+	// Este método pode ser chamado quando o jogador clicar para colocar um edifício
 	private void PlaceBuildingAtHoveredCellPosition()
 	{
 		if (!hoveredGridCell.HasValue)
@@ -86,35 +80,18 @@ public partial class Main : Node
 		var building = buildingScene.Instantiate<Node2D>();
 		AddChild(building);
 
-		
-		building.Position = hoveredGridCell.Value * 64;
-		occupiedCells.Add(hoveredGridCell.Value);
+		building.GlobalPosition = hoveredGridCell.Value * 64;
+		gridManager.MarkTileAsOccupied(hoveredGridCell.Value);
 
 		hoveredGridCell = null;
-		UpdateHighlightTilemaplayer();
+		gridManager.ClearHighlightedTiles();
 	}
 
-	private void UpdateHighlightTilemaplayer()
-	{
-		highlightTilemapLayer.Clear();
-		
-		if (!hoveredGridCell.HasValue)
-		{
-			return;
-		}
-		
-		for(var x = hoveredGridCell.Value.X - 3; x <= hoveredGridCell.Value.X + 3; x++)
-		{
-			for(var y = hoveredGridCell.Value.Y - 3; y <= hoveredGridCell.Value.Y + 3; y++)
-			{
-				highlightTilemapLayer.SetCell(new Vector2I((int)x, (int)y), 0, Vector2I.Zero);
-			}
-		}
-	}
 
 	//=======================signails========================
 
 	///Metjod to handle button press event
+	/// Método para lidar com o evento de pressionar o botão
 	private void OnButtonPressed()
 	{
 		//GD.Print("Place Building Button Pressed");
