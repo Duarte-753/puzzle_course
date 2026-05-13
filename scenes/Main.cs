@@ -5,21 +5,17 @@ namespace Game;
 
 public partial class Main : Node
 {
-	// Declare member variables here. Examples:
-	// Declaração de variáveis membro aqui. Exemplos:
-	private GridManager gridManager;
-	private Sprite2D cursor;
-	private PackedScene buildingScene;
-	private Button placeBuildingButton;
+	private GridManager gridManager;// esta variável armazena a referência ao GridManager, que é um nó filho deste nó, ela é usada para verificar a validade dos tiles, marcar tiles como ocupados e destacar tiles válidos para colocação de edifícios
+	private Sprite2D cursor;// esta variável armazena o sprite do cursor que é usado para mostrar onde o jogador está prestes a colocar um edifício, ela é ativada quando o jogador clica no botão de colocação de edifícios e desativada quando o jogador coloca um edifício ou clica com o botão direito para cancelar
+	private PackedScene buildingScene; // esta variável armazena a cena do edifício que será instanciada quando o jogador clicar para colocar um edifício
+	private Button placeBuildingButton;// este botão é usado para ativar o modo de colocação de edifícios, ele torna o cursor visível e permite que o jogador clique para colocar um edifício
 
-	private Vector2? hoveredGridCell;
+	private Vector2I? hoveredGridCell;// esta variável armazena a posição do tile atualmente sob o cursor, ela é usada para evitar atualizações desnecessárias da camada de destaque quando o cursor se move dentro do mesmo tile
 	
 	
-	// Called when the node enters the scene tree for the first time.
 	// Chamado quando o nó entra na árvore de cena pela primeira vez.
 	public override void _Ready()
 	{
-		//initialize the sprite and building scene
 		//inicialize o sprite e a cena do edifício
 		gridManager = GetNode<GridManager>("GridManager");
 		cursor = GetNode<Sprite2D>("Cursor");
@@ -28,18 +24,16 @@ public partial class Main : Node
 
 		cursor.Visible = false;
 
-		// Connect the button's pressed signal to the handler method
 		// Conecte o sinal de pressionado do botão ao método manipulador
-		/*
-		placeBuildingButton.Connect("pressed", new Callable(this, nameof(OnButtonPressed)));
-		placeBuildingButton.Connect(Button.SignalName.Pressed, Callable.From(OnButtonPressed));
+		/* aqui outras formas de conectar o sinal, mas a mais simples é usando o operador +=
+			placeBuildingButton.Connect("pressed", new Callable(this, nameof(OnButtonPressed)));
+			placeBuildingButton.Connect(Button.SignalName.Pressed, Callable.From(OnButtonPressed));
 		*/
 		placeBuildingButton.Pressed += OnButtonPressed;
 
 		
 	}
 
-	// Called every frame. 'delta' is the elapsed time since the previous frame.
 	// Chamado a cada frame. 'delta' é o tempo decorrido desde o frame anterior.
 	public override void _Process(double delta)
 	{
@@ -67,30 +61,26 @@ public partial class Main : Node
 		}
     }
 
-
-	// This method can be called when the player clicks to place a building
 	// Este método pode ser chamado quando o jogador clicar para colocar um edifício
 	private void PlaceBuildingAtHoveredCellPosition()
 	{
-		if (!hoveredGridCell.HasValue)
+		if (!hoveredGridCell.HasValue)// se não houver uma célula atualmente sob o cursor
 		{
 			return;
 		}
 
-		var building = buildingScene.Instantiate<Node2D>();
-		AddChild(building);
-
+		var building = buildingScene.Instantiate<Node2D>(); // instancie a cena do edifício como um Node2D
+		AddChild(building); // adicione o edifício como filho deste nó para que ele apareça na cena
 		building.GlobalPosition = hoveredGridCell.Value * 64;
 		gridManager.MarkTileAsOccupied(hoveredGridCell.Value);
 
-		hoveredGridCell = null;
-		gridManager.ClearHighlightedTiles();
+		hoveredGridCell = null; // limpe a célula atualmente sobre o cursor para evitar que o destaque fique preso em um tile inválido
+		gridManager.ClearHighlightedTiles();// limpe os tiles destacados para que o jogador possa ver claramente onde o edifício foi colocado e quais tiles ainda são válidos para construção
 	}
 
 
 	//=======================signails========================
 
-	///Metjod to handle button press event
 	/// Método para lidar com o evento de pressionar o botão
 	private void OnButtonPressed()
 	{
