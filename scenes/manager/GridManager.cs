@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using Game.Component;
 using Godot;
 
 namespace Game.Manager;
@@ -29,23 +31,18 @@ public partial class GridManager : Node
 	{
 		occupiedCells.Add(tilePosition);
 	}
-	
-	// Esse método destaca os tiles válidos em um raio ao redor da célula raiz
-	public void HighlightValidTilesInRadius(Vector2I rootCell, int radius)
+
+	public void HigllightBuildableTiles()// este método pode ser chamado para destacar todos os tiles construíveis, ele itera sobre um raio ao redor do tile raiz e destaca os tiles válidos usando a camada de tilemap de destaque
 	{
 		ClearHighlightedTiles();
-		
-		for(var x = (int)rootCell.X - radius; x <= (int)rootCell.X + radius; x++)
+		var buildingComponents = GetTree().GetNodesInGroup(nameof(BuildingComponent)).Cast<BuildingComponent>();// obtenha todos os componentes de edifício na cena usando grupos
+
+		foreach(var buildingComponent in buildingComponents)
 		{
-			for(var y = (int)rootCell.Y - radius; y <= (int)rootCell.Y + radius; y++)
-			{
-				var tilePosition = new Vector2I(x, y);
-				if(!IsTilePositionValid(tilePosition)) continue;
-				highlightTilemapLayer.SetCell(tilePosition, 0, Vector2I.Zero);
-			}
+			HighlightValidTilesInRadius(buildingComponent.GetGridCellPosition(), buildingComponent.BuildableRadius);
 		}
 	}
-
+	
 	// Este método limpa todos os tiles destacados da camada de tilemap de destaque
 	public void ClearHighlightedTiles()
 	{
@@ -60,5 +57,19 @@ public partial class GridManager : Node
 		gridPosition = gridPosition.Floor();
 		//GD.Print(gridPosition);
 		return new Vector2I((int)gridPosition.X, (int)gridPosition.Y);// converta a posição do mouse para coordenadas de grade dividindo pela largura/altura da célula e arredondando para baixo
+	}
+
+	// Esse método destaca os tiles válidos em um raio ao redor da célula raiz
+	private void HighlightValidTilesInRadius(Vector2I rootCell, int radius)
+	{	
+		for(var x = (int)rootCell.X - radius; x <= (int)rootCell.X + radius; x++)
+		{
+			for(var y = (int)rootCell.Y - radius; y <= (int)rootCell.Y + radius; y++)
+			{
+				var tilePosition = new Vector2I(x, y);
+				if(!IsTilePositionValid(tilePosition)) continue;
+				highlightTilemapLayer.SetCell(tilePosition, 0, Vector2I.Zero);
+			}
+		}
 	}
 }

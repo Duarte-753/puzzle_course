@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://dd7xcy3qfe7gi"]
+
+[ext_resource type="Script" uid="uid://cbl718wcjbdep" path="res://scenes/component/BuildingComponent.cs" id="1_tlnvu"]
+
+[node name="BuildingComponent" type="Node2D" unique_id=1732033358]
+script = ExtResource("1_tlnvu")
+BuildableRadius = 4
